@@ -3,6 +3,9 @@ import requests
 import streamlit as st
 import pandas as pd
 
+import os
+backend_default = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+
 st.set_page_config(page_title="LLM Q&A", layout="wide")
 st.title("LLM Q&A")
 
@@ -14,7 +17,7 @@ def save_feedback(index):
 
 with st.sidebar:
     st.header("Backend settings")
-    backend_url = st.text_input("FastAPI URL", value="http://127.0.0.1:8000")
+    backend_url = st.text_input("FastAPI URL", value=backend_default)
     if st.button("Health check"):
         try:
             r = requests.get(f"{backend_url}/health", timeout=5)

@@ -1,44 +1,67 @@
-# 📚 LLM Q&A App with Feedback
+# LLM Q&A 
 
-This application allows you to ask questions to an LLM via a **FastAPI** backend and receive answers with the option to rate them (**like/dislike**).  
-It also supports uploading CSV/Excel files to the backend for further analysis.
+## ⚙️ Features
+- **Natural language to SQL** query generation.
+- **Powered by OpenAI GPT-4o** as the primary LLM.
+- **LangSmith tracing** for monitoring and debugging responses.
+- **Like/Dislike feedback** for rating LLM answers.
+- **Extended logging** for capturing failed requests, LLM errors (e.g., HTTP 500), and other unexpected issues.
+- Upload and process **CSV** or **Excel** files.
+- Optional format, sheet name, and CSV separator/encoding controls.
+
+
+repo_table/
+│
+├── backend/          # FastAPI application
+├── frontend/         # Streamlit application
+├── data/             # Example datasets (if any)
+├── requirements.txt  # Python dependencies
+└── README.md
+
 
 ---
 
-## Requirements
+## Installation & Setup
 
-Before running, make sure you have:
-- Python **3.9+**
-- `pip` (Python package manager)
-- A running **FastAPI backend** with these endpoints:
-  - `GET /health` — health check
-  - `POST /ask` — send a question to the LLM
-  - `POST /upload` — upload data
-  - *(optional)* `POST /save_feedback` — store likes/dislikes
-
----
-
-## Installation
-
+### Clone the repository
 ```bash
-# Clone the repository
-git https://github.com/kaliani/repo_table.git
+git clone https://github.com/kaliani/repo_table.git
 cd repo_table
 
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate   # Linux / macOS
-venv\Scripts\activate      # Windows
+### Clone the repository
+python3 -m venv my_env
+source my_env/bin/activate   # On Linux/Mac
+my_env\Scripts\activate      # On Windows
 
-# Install dependencies
+### Clone the repository
 pip install -r requirements.txt
 
 
-1. Start the FastAPI backend:
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+##  Environment Variables
+Create a .env file inside the backend directory:
+OPENAI_API_KEY=sk-...
+LANGSMITH_TRACING=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+LANGSMITH_PROJECT=pr-gripping-vibration-83
+LANGSMITH_API_KEY=lsv2-...
+OPENAI_MODEL=gpt-4o
 
-2. Start the Streamlit frontend:
+Description:
+OPENAI_API_KEY – Your OpenAI API key.
+
+OPENAI_MODEL – The main LLM model (gpt-4o used in this project).
+
+LANGSMITH_* – LangSmith tracing configuration for monitoring and debugging.
+
+
+## Running the Application
+You need two terminal windows — one for the backend, one for the frontend.
+
+
+### Start the Backend (FastAPI)
+cd backend
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+### Start the Frontend (Streamlit)
+cd frontend
 streamlit run streamlit_app.py
-
-3. Open in your browser:
-http://localhost:8501

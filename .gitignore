@@ -57,5 +57,10 @@ build/
 *.json
 
 # Environment variables
+# Virtual environments
+my_env/
+.venv/
+venv/
+ENV/
+env/
 .env
-.env.*
