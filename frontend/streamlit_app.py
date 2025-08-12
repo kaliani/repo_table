@@ -3,10 +3,10 @@ import requests
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Reestr Q&A", layout="wide")
-st.title("🚗 Reestr Q&A (FastAPI + DuckDB + LLM)")
+st.set_page_config(page_title="LLM Q&A", layout="wide")
+st.title("LLM Q&A")
 
-# Налаштування бекенду
+
 with st.sidebar:
     st.header("Backend settings")
     backend_url = st.text_input("FastAPI URL", value="http://127.0.0.1:8000")
@@ -17,24 +17,20 @@ with st.sidebar:
         except Exception as e:
             st.error(f"Health error: {e}")
 
-# Історія чату
+
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
-# Рендер історії
 for m in st.session_state["messages"]:
     with st.chat_message(m["role"]):
         st.markdown(m["content"])
 
-# Ввід питання
 prompt = st.chat_input("Постав питання (наприклад: Виведи топ-10 найпопулярніших марок авто)")
 if prompt:
-    # показуємо юзерське повідомлення
     st.session_state["messages"].append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # викликаємо бекенд
     try:
         resp = requests.post(f"{backend_url}/ask", json={"question": prompt}, timeout=120)
         resp.raise_for_status()
@@ -44,11 +40,10 @@ if prompt:
         rows_preview = data.get("rows_preview", [])
         total_rows = data.get("total_rows", 0)
 
-        # показуємо відповідь бота
         with st.chat_message("assistant"):
             st.markdown(answer)
 
-            with st.expander("🔍 Generated SQL"):
+            with st.expander("Generated SQL"):
                 st.code(sql, language="sql")
                 st.write(f"Total rows: {total_rows}")
 
@@ -61,4 +56,33 @@ if prompt:
     except Exception as e:
         with st.chat_message("assistant"):
             st.error(f"Request failed: {e}")
-        st.session_state["messages"].append({"role": "assistant", "content": f"❌ {e}"})
+        st.session_state["messages"].append({"role": "assistant", "content": f" {e}"})
+
+
+with st.sidebar:
+    st.header("Upload data")
+    fmt_choice = st.radio("Format", ["auto", "csv", "excel"], horizontal=True)
+    sheet_name = st.text_input("Excel sheet name (optional)")
+    sep = st.text_input("CSV separator (optional, e.g. ;)", value="")
+    encoding = st.text_input("CSV encoding (optional, e.g. utf-8, cp1251)", value="")
+
+    uploaded = st.file_uploader("Choose CSV or Excel", type=["csv", "xlsx", "xls"])
+    if uploaded and st.button("Upload & replace table"):
+        try:
+            files = {"file": (uploaded.name, uploaded.getvalue(), "application/octet-stream")}
+            data = {}
+            if fmt_choice != "auto":
+                data["fmt"] = fmt_choice
+            if sheet_name:
+                data["sheet_name"] = sheet_name
+            if sep:
+                data["sep"] = sep
+            if encoding:
+                data["encoding"] = encoding
+
+            r = requests.post(f"{backend_url}/upload", files=files, data=data, timeout=120)
+            r.raise_for_status()
+            info = r.json()
+            st.success(f"Uploaded: {info.get('format')} | rows={info.get('rows')} | columns={info.get('columns')}")
+        except Exception as e:
+            st.error(f"Upload failed: {e}")
