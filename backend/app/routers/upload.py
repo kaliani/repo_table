@@ -1,6 +1,7 @@
 import io, pandas as pd
 from typing import Optional
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks
+from services.tasks import post_upload_profile
 from ..core.config import settings
 from ..core.db import conn
 
@@ -19,6 +20,7 @@ async def upload(
     sheet_name: Optional[str] = Form(None),
     sep: Optional[str] = Form(None),
     encoding: Optional[str] = Form(None),
+    background_tasks: BackgroundTasks = None,
 ):
     fmt = (fmt or _detect_fmt(file.filename)).lower()
     if fmt not in settings.ALLOWED_FORMATS:
@@ -48,5 +50,8 @@ async def upload(
         conn.unregister("tmp_df")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"DuckDB load error: {e}")
+    
+    if background_tasks:
+        background_tasks.add_task(post_upload_profile)
 
     return {"ok": True, "rows": int(len(df)), "columns": list(map(str, df.columns)), "format": fmt}
