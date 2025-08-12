@@ -1,4 +1,4 @@
-# streamlit_app.py
+
 import requests
 import streamlit as st
 import pandas as pd
@@ -6,6 +6,11 @@ import pandas as pd
 st.set_page_config(page_title="LLM Q&A", layout="wide")
 st.title("LLM Q&A")
 
+
+def save_feedback(index):
+    """Save feedback in session state and optionally send to backend"""
+    feedback_value = st.session_state[f"feedback_{index}"]
+    st.session_state["messages"][index]["feedback"] = feedback_value
 
 with st.sidebar:
     st.header("Backend settings")
@@ -18,12 +23,24 @@ with st.sidebar:
             st.error(f"Health error: {e}")
 
 
+
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
-for m in st.session_state["messages"]:
+for i, m in enumerate(st.session_state["messages"]):
     with st.chat_message(m["role"]):
         st.markdown(m["content"])
+        if m["role"] == "assistant":
+            feedback = m.get("feedback", None)
+            st.session_state[f"feedback_{i}"] = feedback
+            st.feedback(
+                "thumbs",
+                key=f"feedback_{i}",
+                disabled=feedback is not None,
+                on_change=save_feedback,
+                args=[i],
+            )
+
 
 prompt = st.chat_input("Постав питання (наприклад: Виведи топ-10 найпопулярніших марок авто)")
 if prompt:
@@ -51,12 +68,19 @@ if prompt:
                 st.subheader("Rows preview")
                 st.dataframe(pd.DataFrame(rows_preview), use_container_width=True)
 
+            st.feedback(
+                "thumbs",
+                key=f"feedback_{len(st.session_state['messages'])}",
+                on_change=save_feedback,
+                args=[len(st.session_state["messages"])],
+            )
+
         st.session_state["messages"].append({"role": "assistant", "content": answer})
 
     except Exception as e:
         with st.chat_message("assistant"):
             st.error(f"Request failed: {e}")
-        st.session_state["messages"].append({"role": "assistant", "content": f" {e}"})
+        st.session_state["messages"].append({"role": "assistant", "content": f"{e}"})
 
 
 with st.sidebar:
