@@ -62,7 +62,7 @@ if prompt:
 with st.sidebar:
     st.header("Upload data")
     fmt_choice = st.radio("Format", ["auto", "csv", "excel"], horizontal=True)
-    sheet_name = st.text_input("Excel sheet name (optional)")
+    sheet_name = st.text_input("Excel sheet name")
     sep = st.text_input("CSV separator (optional, e.g. ;)", value="")
     encoding = st.text_input("CSV encoding (optional, e.g. utf-8, cp1251)", value="")
 

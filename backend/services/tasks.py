@@ -1,6 +1,7 @@
-import json, time, os
+# services/tasks.py
+import json, os
 from datetime import datetime, timezone
-from app.core.db import conn
+from app.core.db import conn  
 
 LOG_PATH = os.getenv("APP_LOG_PATH", "logs/events.log")
 os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
@@ -12,11 +13,31 @@ def _append_log(payload: dict):
 def log_ask_event(question: str, sql: str, total_rows: int):
     _append_log({
         "ts": datetime.now(timezone.utc).isoformat(),
+        "level": "info",
         "event": "ask",
         "question": question,
         "sql": sql,
         "total_rows": total_rows,
     })
+
+def log_error(event: str, question: str, error: str,
+              sql: str | None = None,
+              phase: str | None = None,
+              status: int | None = None,
+              extra: dict | None = None):
+    payload = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "level": "error",
+        "event": event,            
+        "phase": phase,     
+        "status": status,       
+        "question": question,
+        "sql": sql,
+        "error": error,
+    }
+    if extra:
+        payload["extra"] = extra
+    _append_log(payload)
 
 def post_upload_profile():
     try:
@@ -28,12 +49,9 @@ def post_upload_profile():
         }
         _append_log({
             "ts": datetime.now(timezone.utc).isoformat(),
+            "level": "info",
             "event": "post_upload_profile",
             "summary": summary,
         })
     except Exception as e:
-        _append_log({
-            "ts": datetime.now(timezone.utc).isoformat(),
-            "event": "post_upload_profile_error",
-            "error": str(e),
-        })
+        log_error(event="post_upload_profile_error", question="", error=str(e))
