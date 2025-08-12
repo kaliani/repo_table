@@ -1,1 +1,8 @@
+fastapi
+uvicorn[standard]
+duckdb
 pandas
+python-dotenv
+langchain
+langchain-openai
+streamlit
