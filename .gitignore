@@ -47,10 +47,7 @@ build/
 *.spec
 
 # Local data files
-*.csv
 *.tsv
-*.xlsx
-*.xls
 *.parquet
 *.feather
 *.jsonl
